@@ -10,6 +10,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import type { ReactNode } from "react";
 import { 
   Github, 
   Camera, 
@@ -18,15 +19,41 @@ import {
   Waves, 
   Moon, 
   Search, 
-  UserCircle 
+  UserCircle,
+  Hexagon,
+  Activity,
+  AtSign,
+  ChevronRight
 } from "lucide-react";
 
 // --- Types ---
 
 type View = "landing" | "gallery";
 
-// --- Components ---
+// --- Helpers ---
 
+const getYouTubeEmbedUrl = (url: string) => {
+  let videoId = "";
+  try {
+    if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1].split(/[?#]/)[0];
+    } else if (url.includes("youtube.com/watch")) {
+      const urlParams = new URL(url).searchParams;
+      videoId = urlParams.get("v") || "";
+    } else if (url.includes("youtube.com/embed/")) {
+      videoId = url.split("youtube.com/embed/")[1].split(/[?#]/)[0];
+    } else {
+      // Assume the string provided might just be the ID
+      videoId = url;
+    }
+  } catch (e) {
+    videoId = url;
+  }
+  
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&showinfo=0&rel=0`;
+};
+
+// --- Components ---
 const NavBar = ({ onViewChange, currentView }: { onViewChange: (v: View) => void, currentView: View }) => (
   <nav className="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl shadow-2xl shadow-black/40">
     <div className="flex justify-between items-center px-6 md:px-12 py-6 w-full max-w-screen-2xl mx-auto">
@@ -85,7 +112,52 @@ const Footer = ({ onViewChange, brand }: { onViewChange: (v: View) => void, bran
   </footer>
 );
 
+function ActionButton({ icon, label, onClick }: { icon: ReactNode; label: string; onClick?: () => void }) {
+  return (
+    <motion.a 
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      href="#" 
+      onClick={(e) => {
+        if (onClick) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="flex items-center gap-3 px-8 py-3 bg-surface-container hover:bg-surface-container-high transition-all rounded-full group border border-white/5"
+    >
+      <span className="text-primary/60 group-hover:text-primary transition-colors">
+        {icon}
+      </span>
+      <span className="font-headline text-xs tracking-widest uppercase text-on-surface-variant group-hover:text-primary transition-colors">
+        {label}
+      </span>
+    </motion.a>
+  );
+}
+
 const VideoLandingPage = ({ onNavigateToGallery }: { onNavigateToGallery: () => void }) => {
+  const features = [
+    {
+      icon: <Hexagon className="w-8 h-8 text-primary/40" />,
+      title: "Minimalism",
+      description: "Reduction as a creative discipline. Removing the noise to amplify the signal.",
+      bg: "bg-surface-container-low"
+    },
+    {
+      icon: <Activity className="w-8 h-8 text-primary/40" />,
+      title: "Motion",
+      description: "Fluid interactions that respect user intent and cognitive load.",
+      bg: "bg-surface-container-lowest border border-outline-variant"
+    },
+    {
+      icon: <Moon className="w-8 h-8 text-primary/40" />,
+      title: "Contrast",
+      description: "Leveraging obsidian depths and metallic highlights for focus.",
+      bg: "bg-surface-container-low"
+    }
+  ];
+
   return (
     <div className="relative min-h-screen flex flex-col items-center">
       <main className="relative z-10 w-full max-w-4xl flex flex-col items-center text-center space-y-12 pt-32 pb-20 px-6">
@@ -95,14 +167,19 @@ const VideoLandingPage = ({ onNavigateToGallery }: { onNavigateToGallery: () => 
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full"></div>
         </div>
 
-        <div className="space-y-4">
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl tracking-tighter leading-none text-primary">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="space-y-4"
+        >
+          <h1 className="font-display text-6xl md:text-8xl lg:text-9xl tracking-tighter leading-none text-primary">
             NOCTURNE
           </h1>
-          <p className="font-headline text-sm md:text-base tracking-[0.3em] uppercase text-on-surface-variant/60">
+          <p className="font-headline text-sm md:text-base tracking-[0.3em] uppercase text-on-surface-variant">
             Digital Artifact // Sequence 001
           </p>
-        </div>
+        </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -113,7 +190,7 @@ const VideoLandingPage = ({ onNavigateToGallery }: { onNavigateToGallery: () => 
         >
           <div className="video-container">
             <iframe 
-              src="https://www.youtube.com/embed/gJu3lS_qXNY?autoplay=1&mute=1&controls=0&loop=1&playlist=gJu3lS_qXNY&modestbranding=1&showinfo=0&rel=0" 
+              src={getYouTubeEmbedUrl("https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN")} 
               title="YouTube video player"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -123,51 +200,44 @@ const VideoLandingPage = ({ onNavigateToGallery }: { onNavigateToGallery: () => 
           </div>
         </motion.div>
 
-        <div className="max-w-xl space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="max-w-xl space-y-8"
+        >
           <p className="text-on-surface/80 text-lg font-light leading-relaxed">
             An exploration into the boundary between digital ephemera and archival physicalism. This sequence represents the transition from void to structure.
           </p>
           <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <a className="flex items-center gap-2 px-6 py-3 bg-surface-container hover:bg-surface-container-high transition-all rounded-full group" href="#">
-              <Github className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="font-headline text-xs tracking-widest uppercase text-on-surface-variant">Github</span>
-            </a>
-            <a 
-              onClick={onNavigateToGallery}
-              className="flex items-center gap-2 px-6 py-3 bg-surface-container hover:bg-surface-container-high transition-all rounded-full group cursor-pointer"
-            >
-              <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="font-headline text-xs tracking-widest uppercase text-on-surface-variant">Gallery</span>
-            </a>
-            <a className="flex items-center gap-2 px-6 py-3 bg-surface-container hover:bg-surface-container-high transition-all rounded-full group" href="#">
-              <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="font-headline text-xs tracking-widest uppercase text-on-surface-variant">Social</span>
-            </a>
+            <ActionButton icon={<Github className="w-5 h-5" />} label="Github" />
+            <ActionButton icon={<Camera className="w-5 h-5" />} label="Gallery" onClick={onNavigateToGallery} />
+            <ActionButton icon={<AtSign className="w-5 h-5" />} label="Social" />
           </div>
-        </div>
+        </motion.div>
 
-        <section className="w-full max-w-6xl mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-          <div className="p-10 bg-surface-container-low rounded-xl flex flex-col justify-between aspect-square md:aspect-auto min-h-[250px] border border-white/5">
-            <Binary className="text-primary/40 w-10 h-10" />
-            <div>
-              <h3 className="font-headline text-xl mb-2 text-primary">Minimalism</h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed opacity-60">Reduction as a creative discipline. Removing the noise to amplify the signal.</p>
-            </div>
-          </div>
-          <div className="p-10 bg-surface-container-lowest rounded-xl flex flex-col justify-between aspect-square md:aspect-auto min-h-[250px] border border-white/10">
-            <Waves className="text-primary/40 w-10 h-10" />
-            <div>
-              <h3 className="font-headline text-xl mb-2 text-primary">Motion</h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed opacity-60">Fluid interactions that respect user intent and cognitive load.</p>
-            </div>
-          </div>
-          <div className="p-10 bg-surface-container-low rounded-xl flex flex-col justify-between aspect-square md:aspect-auto min-h-[250px] border border-white/5">
-            <Moon className="text-primary/40 w-10 h-10" />
-            <div>
-              <h3 className="font-headline text-xl mb-2 text-primary">Contrast</h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed opacity-60">Leveraging obsidian depths and metallic highlights for focus.</p>
-            </div>
-          </div>
+        <section className="relative z-10 w-full max-w-6xl mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          {features.map((feature, idx) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.6 }}
+              className={`p-10 ${feature.bg} rounded-3xl flex flex-col justify-between aspect-square md:aspect-auto min-h-[300px] group transition-transform hover:-translate-y-1 border border-white/5`}
+            >
+              <div className="mb-8 group-hover:scale-110 transition-transform duration-500 origin-left">
+                {feature.icon}
+              </div>
+              <div>
+                <h3 className="font-headline text-2xl mb-3 text-primary">{feature.title}</h3>
+                <p className="text-sm text-on-surface-variant leading-relaxed opacity-60">
+                  {feature.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </section>
       </main>
     </div>
@@ -176,15 +246,15 @@ const VideoLandingPage = ({ onNavigateToGallery }: { onNavigateToGallery: () => 
 
 const VideoGallery = () => {
   const videoItems = [
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
-    { id: "gJu3lS_qXNY", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
+    { src: "https://youtu.be/lqFQ540ARgk?si=63H7jikRJwkVAflN", aspect: "aspect-video" },
   ];
 
   return (
@@ -205,7 +275,7 @@ const VideoGallery = () => {
             className={`relative overflow-hidden bg-surface-container-lowest rounded-lg group ${video.aspect} shadow-[0_40px_100px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/5 transition-all duration-500 hover:scale-[1.02]`}
           >
             <iframe 
-              src={`https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${video.id}&modestbranding=1&showinfo=0&rel=0&iv_load_policy=3`} 
+              src={getYouTubeEmbedUrl(video.src)} 
               title={`Archive shard ${idx + 1}`}
               className="absolute inset-0 w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
               frameBorder="0"
